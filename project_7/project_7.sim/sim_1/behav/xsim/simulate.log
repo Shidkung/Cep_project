@@ -1,0 +1,44 @@
+Time resolution is 1 ps
+Note: ======== SIMULATION START! ========
+Time: 0 ps  Iteration: 0  Process: /SPI_SLAVE_TB/rst_gen_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Total transactions for master to slave direction: 10000
+Time: 0 ps  Iteration: 0  Process: /SPI_SLAVE_TB/rst_gen_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Total transactions for slave to master direction: 10000
+Time: 0 ps  Iteration: 0  Process: /SPI_SLAVE_TB/rst_gen_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from master: 1000
+Time: 13764630 ns  Iteration: 5  Process: /SPI_SLAVE_TB/spi_slave_udo_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from slave: 1000
+Time: 13765093 ns  Iteration: 0  Process: /SPI_SLAVE_TB/spi_master_model_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from master: 2000
+Time: 27405630 ns  Iteration: 5  Process: /SPI_SLAVE_TB/spi_slave_udo_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from slave: 2000
+Time: 27406093 ns  Iteration: 0  Process: /SPI_SLAVE_TB/spi_master_model_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from master: 3000
+Time: 41080630 ns  Iteration: 5  Process: /SPI_SLAVE_TB/spi_slave_udo_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from slave: 3000
+Time: 41081093 ns  Iteration: 0  Process: /SPI_SLAVE_TB/spi_master_model_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from master: 4000
+Time: 54734630 ns  Iteration: 5  Process: /SPI_SLAVE_TB/spi_slave_udo_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from slave: 4000
+Time: 54735093 ns  Iteration: 0  Process: /SPI_SLAVE_TB/spi_master_model_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from master: 5000
+Time: 68380630 ns  Iteration: 5  Process: /SPI_SLAVE_TB/spi_slave_udo_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from slave: 5000
+Time: 68381093 ns  Iteration: 0  Process: /SPI_SLAVE_TB/spi_master_model_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from master: 6000
+Time: 82120630 ns  Iteration: 5  Process: /SPI_SLAVE_TB/spi_slave_udo_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from slave: 6000
+Time: 82121093 ns  Iteration: 0  Process: /SPI_SLAVE_TB/spi_master_model_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from master: 7000
+Time: 95770630 ns  Iteration: 5  Process: /SPI_SLAVE_TB/spi_slave_udo_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from slave: 7000
+Time: 95771093 ns  Iteration: 0  Process: /SPI_SLAVE_TB/spi_master_model_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from master: 8000
+Time: 109588630 ns  Iteration: 5  Process: /SPI_SLAVE_TB/spi_slave_udo_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from slave: 8000
+Time: 109589093 ns  Iteration: 0  Process: /SPI_SLAVE_TB/spi_master_model_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from master: 9000
+Time: 123275630 ns  Iteration: 5  Process: /SPI_SLAVE_TB/spi_slave_udo_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received from slave: 9000
+Time: 123276093 ns  Iteration: 0  Process: /SPI_SLAVE_TB/spi_master_model_p  File: C:/Users/User/project_7/project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd
+Note: Transactions received f

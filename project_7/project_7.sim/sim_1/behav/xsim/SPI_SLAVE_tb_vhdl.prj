@@ -1,0 +1,10 @@
+# compile vhdl design source files
+vhdl xil_defaultlib  \
+"../../../../project_7.srcs/sources_1/new/Spi_slave.vhd" \
+"../../../../project_7.srcs/sources_1/new/Top.vhd" \
+"../../../../project_7.srcs/sources_1/new/Spi_master.vhd" \
+"../../../../project_7.srcs/sim_1/new/Spi_slaveTB.vhd" \
+"../../../../project_7.srcs/sim_1/new/SPI_TESTBENCH.vhd" \
+
+# Do not sort compile order
+nosort

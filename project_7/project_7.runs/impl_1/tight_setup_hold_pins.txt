@@ -1,0 +1,36 @@
++====================+====================+======================================+
+| Launch Setup Clock | Launch Hold Clock  | Pin                                  |
++====================+====================+======================================+
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | FSM_sequential_byte_counter_reg[1]/D |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[14]/D                  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[5]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | FSM_sequential_byte_counter_reg[0]/D |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[9]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[4]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[7]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[8]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[10]/D                  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[0]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[1]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[6]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[3]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[15]/D                  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[13]/D                  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[2]/D                   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[11]/D                  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | DOUT_Data_reg[12]/D                  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[13]/D  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[6]/D   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[9]/D   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/MISO_reg/D            |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[4]/D   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[15]/D  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[14]/D  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[10]/D  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[12]/D  |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[5]/D   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[3]/D   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[2]/D   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/data_shreg_reg[1]/D   |
+| clk_out1_clk_wiz_0 | clk_out1_clk_wiz_0 | spi_slave_inst/shreg_busy_reg/D      |
++--------------------+--------------------+--------------------------------------+

@@ -1,0 +1,7 @@
+Running: xsim.dir/SPI_SLAVE_tb_behav/xsimk.exe -simmode gui -wdb SPI_SLAVE_tb_behav.wdb -simrunnum 0 -socket 60388
+Design successfully loaded
+Design Loading Memory Usage: 8108 KB (Peak: 8108 KB)
+Design Loading CPU Usage: 15 ms
+Simulation completed
+Simulation Memory Usage: 16808 KB (Peak: 16808 KB)
+Simulation CPU Usage: 3765 ms
