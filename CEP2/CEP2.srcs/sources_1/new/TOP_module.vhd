@@ -92,7 +92,7 @@ architecture Behavioral of TOP_module is
     -- Temporary signal to store the data received from the master
    -- Replace the large std_logic_vector with a BRAM-based storage
     type Data_Memory_pin1 is array (0 to 1999) of std_logic_vector(47 downto 0);  -- 182 * 32-bit blocks
-    type Pinconfigs is array (0 to 2) of std_logic_vector(15 downto 0);  -- 182 * 32-bit blocks
+    type Pinconfigs is array (0 to 7) of std_logic_vector(31 downto 0);  -- 182 * 32-bit blocks
     signal Pinconfig : Pinconfigs :=(others =>(others=>'0'));
     signal Data_BRAM : Data_Memory_pin1 := (others => (others => '0'));  -- BRAM array to store timestamp and GPIO data
     signal Data_temp2   : std_logic_vector(15 downto 0);
@@ -106,7 +106,7 @@ architecture Behavioral of TOP_module is
     signal state_bit2  : std_logic := '0'; 
     
     -- Commands
-    constant START_CMD    : std_logic_vector(15 downto 0) := "0111001101110100"; -- ASCII for 'st'
+    constant START_CMD    : std_logic_vector(15 downto 0) := x"0111001101110100"; -- ASCII for 'st'
     constant STOP_CMD     : std_logic_vector(15 downto 0) := "0111001001110011"; -- ASCII for 'rs'
     constant Last_CMD     : std_logic_vector(15 downto 0) := x"3030"; -- Final command
 
@@ -117,8 +117,8 @@ architecture Behavioral of TOP_module is
     signal clk_locked    : std_logic;  -- Clock stable signal
     
     -- Assume the command format for GPIO and duration is "G2X10", where 'X' separates GPIO and duration
-    constant GPIO_CMD_PREFIX : std_logic_vector(1 downto 0) := "00"; -- ASCII for 'G'01000111
-    constant ADC_CMD_PREFIX : std_logic_vector(1 downto 0) := "01"; -- ASCII for 'P'01000001
+    constant GPIO_CMD_PREFIX : std_logic_vector(0 downto 0) := "0"; -- ASCII for 'G'01000111
+    constant ADC_CMD_PREFIX : std_logic_vector(0 downto 0) := "1"; -- ASCII for 'P'01000001
     signal duration : integer := 0;  -- Store the duration in seconds
     signal capture_time : integer := 0; -- Time counter for capture duration
     signal type_selected : std_logic_vector(1 downto 0);  -- Signal to store selected GPIO pin
@@ -129,6 +129,7 @@ architecture Behavioral of TOP_module is
     signal pin_value    : std_logic_vector(11 downto 0);  -- 12 bits for pin value (0-4095)
     signal send_part_state : integer := 0;  -- State for which part to send
     signal pinconfig_num : integer :=0;
+    signal set_pin_state : integer :=0;
     signal start_stop : std_logic;
     signal mosi_int  : std_logic;
 
@@ -267,20 +268,86 @@ begin
         temp_pointer <= 0; -- Reset the pointer
     elsif rising_edge(CLK) then
      -- Count up to 1 ms (assuming clk_ms is 1 MHz, i.e., 1 clock = 1 us)
-        --if ms_counter < 100000 then  -- 1000 clock cycles for 1 ms
-           -- ms_counter <= ms_counter + 1;  -- Increment counter
-       -- else
-          --  ms_trigger <= '1';  -- Trigger the 1 ms event
-           -- ms_counter <= 0;    -- Reset the counter for the next interval
-        --end if;
+        if ms_counter < 100000 then  -- 1000 clock cycles for 1 ms
+            ms_counter <= ms_counter + 1;  -- Increment counter
+        else
+           ms_trigger <= '1';  -- Trigger the 1 ms event
+           ms_counter <= 0;    -- Reset the counter for the next interval
+        end if;
         case current_state is
             when IDLE =>
                 --DOUT_VLD <= '1'; -- No valid data in IDLE
             when PREPARING =>
                  DOUT_VLD <= '1';   
                 if DIN_VLD = '1'  then  -- Check for 'G' command
-                if pinconfig_num <3 then
-                        
+                if pinconfig_num <8 then
+                    case set_pin_state is
+                        when 0 =>
+                            if Data_temp2(15) = '0' then
+                                if Data_temp2(14)='0' then
+                                    case Data_temp2(13 downto 12) is
+                                    when "00" =>
+                                         Pinconfig(pinconfig_num)(31)<= '0';
+                                         Pinconfig(pinconfig_num)(30)<= '0';
+                                         Pinconfig(pinconfig_num)(29 downto 28)<= Data_temp2(13 downto 12);
+                                         Pinconfig(pinconfig_num)(27 downto 16)<= Data_temp2(11 downto 0);
+                                    when "01" =>
+                                         Pinconfig(pinconfig_num)(31)<= '0';
+                                         Pinconfig(pinconfig_num)(30)<= '0';
+                                         Pinconfig(pinconfig_num)(29 downto 28)<= Data_temp2(13 downto 12);
+                                         Pinconfig(pinconfig_num)(27 downto 16)<= Data_temp2(11 downto 0);
+                                    when "10" =>
+                                         Pinconfig(pinconfig_num)(31)<= '0';
+                                         Pinconfig(pinconfig_num)(30)<= '0';
+                                         Pinconfig(pinconfig_num)(29 downto 28)<= Data_temp2(13 downto 12);
+                                         Pinconfig(pinconfig_num)(27 downto 16)<= Data_temp2(11 downto 0);
+                                    when "11" =>
+                                         Pinconfig(pinconfig_num)(31)<= '0';
+                                         Pinconfig(pinconfig_num)(30)<= '0';
+                                         Pinconfig(pinconfig_num)(29 downto 28)<= Data_temp2(13 downto 12);
+                                         Pinconfig(pinconfig_num)(27 downto 16)<= Data_temp2(11 downto 0);
+                                    when others =>
+                                        DOUT_Data <= x"726A"; -- Indicate PREPARING
+                                    end case;    
+                                elsif Data_temp2(14)='1' then
+                                        case Data_temp2(13 downto 12) is
+                                    when "00" =>
+                                         Pinconfig(pinconfig_num)(31)<= Data_temp2(15);
+                                         Pinconfig(pinconfig_num)(30)<= Data_temp2(14);
+                                         Pinconfig(pinconfig_num)(29 downto 28)<= Data_temp2(13 downto 12);
+                                         Pinconfig(pinconfig_num)(27 downto 16)<= Data_temp2(11 downto 0);
+                                    when "01" =>
+                                         Pinconfig(pinconfig_num)(31)<= Data_temp2(15);
+                                         Pinconfig(pinconfig_num)(30)<= Data_temp2(14);
+                                         Pinconfig(pinconfig_num)(29 downto 28)<= Data_temp2(13 downto 12);
+                                         Pinconfig(pinconfig_num)(27 downto 16)<= Data_temp2(11 downto 0);
+                                    when "10" =>
+                                         Pinconfig(pinconfig_num)(31)<= Data_temp2(15);
+                                         Pinconfig(pinconfig_num)(30)<= Data_temp2(14);
+                                         Pinconfig(pinconfig_num)(29 downto 28)<= Data_temp2(13 downto 12);
+                                         Pinconfig(pinconfig_num)(27 downto 16)<= Data_temp2(11 downto 0);
+                                    when "11" =>
+                                         Pinconfig(pinconfig_num)(31)<= Data_temp2(15);
+                                         Pinconfig(pinconfig_num)(30)<= Data_temp2(14);
+                                         Pinconfig(pinconfig_num)(29 downto 28)<= Data_temp2(13 downto 12);
+                                         Pinconfig(pinconfig_num)(27 downto 16)<= Data_temp2(11 downto 0);
+                                    when others =>
+                                        DOUT_Data <= x"726A"; -- Indicate PREPARING
+                                    end case;    
+                                else
+                                
+                                end if;
+                            elsif Data_temp2(15) = '1' then
+                                Pinconfig(pinconfig_num)(15)<= '1';
+                            else
+                                DOUT_Data <= x"726A"; -- Indicate PREPARING
+                            end if;
+                            set_pin_state <= 1;  -- Move to next state to send the next part
+                        when 1 =>
+                            set_pin_state <= 0;  -- Move to next state to send the last par
+                        when others =>
+                            DOUT_Data <= (others => '0');  -- Default case
+                    end case;
                         pinconfig_num <= pinconfig_num+1;
                     else 
                         DOUT_Data <= x"4675"; -- Indicate PREPARING
