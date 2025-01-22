@@ -63,20 +63,20 @@ architecture Behavioral of TOP_module is
     -- Temporary signal to store the data received from the master
    -- Replace the large std_logic_vector with a BRAM-based storage
     type Data_Memory_OUTPUT is array (0 to 11,0 to 39) of std_logic_vector(31 downto 0);  -- 182 * 32-bit blocks
-    type Data_sendout is array (0 to 319) of std_logic_vector(31 downto 0);
+    type Data_sendout is array (0 to 479) of std_logic_vector(31 downto 0);
     type temp_pointers is array (0 to 11) of integer range 0 to 40;
     type input_pointer is array (0 to 1) of integer range 0 to 20;
     type PINCONFIG is array (0 to 7) of std_logic_vector(3 downto 0);  -- 182 * 32-bit blocks
     type input_config is array(0 to 1,0 to 19) of std_logic_vector(14 downto 0);
     signal OUTPUTS : PINCONFIG :=(others =>(others=>'0'));
-    signal INPUT : input_config := (others => (others => (others => '0')));
-    signal Data_BRAM_OUTPUTS : Data_Memory_OUTPUT := (others => (others => (others => '0')));  -- BRAM array to store timestamp and GPIO1 data
+    signal INPUT : input_config := (others =>(others =>(others => '0')));
+    signal Data_BRAM_OUTPUTS : Data_Memory_OUTPUT := (others => (others => (others => '1')));  -- BRAM array to store timestamp and GPIO1 data
     signal Data_BRAM : Data_sendout := (others => (others => '0'));  -- BRAM array to store timestamp and GPIO data
     signal Data_temp2   : std_logic_vector(15 downto 0);
     signal input_pointers : input_pointer := (others => 0);
-    signal temp_pointer : integer range 0 to 320 := 0;
-    signal temp_pointer_s : temp_pointers :=(others => 0);  -- BRAM array to store timestamp and GPIO1 data      
-    signal read_pointer : integer range 0 to 320 := 0;
+    signal temp_pointer : integer range 0 to 480 := 0;
+    signal temp_pointer_s : temp_pointers :=(others => 0); 
+    signal read_pointer : integer range 0 to 480 := 0;
     signal Capture_sucess : boolean := false;
     
     -- Signals for detecting the "start" and "stop" commands
@@ -92,22 +92,15 @@ architecture Behavioral of TOP_module is
     signal clk_ms      : std_logic;  -- Generated clock from Clocking Wizard
     
     -- Assume the command format for GPIO and duration is "G2X10", where 'X' separates GPIO and duration   
-    signal type_selected : std_logic_vector(1 downto 0);  -- Signal to store selected GPIO pin
-    signal pin_selected : std_logic_vector(1 downto 0);  -- Signal to store selected GPIO pin
-    signal pin_type     : std_logic_vector(1 downto 0);  -- 2 bits for pin type (G, P, A)
-    signal IN_OUT : std_logic_vector(1 downto 0);
     signal send_part_state : integer range 0 to 2 := 0;  -- State for which part to send
     signal output_num : integer range 0 to 8 :=0;
     signal output_num_use : integer range 0 to 8 :=0;
     signal start_stop : std_logic;
-    type signal_all is array (0 to 1,0 to 2) of std_logic_vector(11 downto 0);
-    signal signal_alls : signal_all := (others => (others => (others => '0')));
-    signal signal_in_GPIO : std_logic_vector(7 downto 0) :="00000000"; -- Delayed version of signal_in
-    signal current_GPIO : std_logic_vector(7 downto 0) :="00000000"; -- Delayed version of signal_in
-    signal previous_GPIO : std_logic_vector(7 downto 0) :="00000000"; -- Delayed version of signal_in
-    signal signal_in_PWM : std_logic_vector(3 downto 0) :="0000"; -- Delayed version of signal_in
-    signal current_PWM : std_logic_vector(3 downto 0) :="0000"; -- Delayed version of signal_in
-    signal previous_PWM : std_logic_vector(3 downto 0) :="0000"; -- Delayed version of signal_in
+    signal signal_in_GPIO : std_logic_vector(11 downto 0) :=(others=>'0'); -- Delayed version of signal_in
+    signal current_GPIO : std_logic_vector(11 downto 0) :=(others=>'0'); -- Delayed version of signal_in
+    signal previous_GPIO : std_logic_vector(11 downto 0) :=(others=>'0'); -- Delayed version of signal_in
+    signal cap_sucess : std_logic_vector(11 downto 0) :=(others=>'0');
+  
 begin
 
  spi_slave_inst : entity work.SPI_SLAVE
@@ -215,6 +208,7 @@ begin
     end process;
   -- Process for managing DOUT based on the current state
 process (CLK, RST)
+
 begin
     if RST = '1' then
         temp_pointer <= 0; -- Reset the pointer
@@ -222,6 +216,7 @@ begin
      -- Count up to 1 ms (assuming clk_ms is 1 MHz, i.e., 1 clock = 1 us)
         case current_state is
             when IDLE =>
+                cap_sucess<=(others=>'0');
                 read_pointer <= 0;
                 temp_pointer<=0;
                 output_num<=0;
@@ -241,78 +236,74 @@ begin
                             when x"31" =>
                                 OUTPUTS(output_num)(3)<='0';
                                 OUTPUTS(output_num)(2 downto 0)<="000";
-                                 output_num<=output_num+1;
                                  output_num_use<=output_num_use+1;
                             when x"32" =>
                                 OUTPUTS(output_num)(3)<='0';
                                 OUTPUTS(output_num)(2 downto 0)<="001";
-                                output_num<=output_num+1;
                                 output_num_use<=output_num_use+1;
                             when x"33" =>
                                 OUTPUTS(output_num)(3)<='0';
                                 OUTPUTS(output_num)(2 downto 0)<="010";
-                                output_num<=output_num+1;
+
                                 output_num_use<=output_num_use+1;
                             when x"34" =>
                                 OUTPUTS(output_num)(3)<='0';
                                 OUTPUTS(output_num)(2 downto 0)<="011";
-                                output_num<=output_num+1;
+
                                   output_num_use<=output_num_use+1;
                             when x"35" =>
                                 OUTPUTS(output_num)(3)<='0';
                                OUTPUTS(output_num)(2 downto 0)<="100";
-                               output_num<=output_num+1;
+
                                   output_num_use<=output_num_use+1;
                             when x"36" =>
                                 OUTPUTS(output_num)(3)<='0';
                                 OUTPUTS(output_num)(2 downto 0)<="101";
-                                output_num<=output_num+1;
-                                  output_num_use<=output_num_use+1;
+
+                                 output_num_use<=output_num_use+1;
                             when x"37" =>
                                 OUTPUTS(output_num)(3)<='0';
                                 OUTPUTS(output_num)(2 downto 0)<="110";
-                                output_num<=output_num+1;
+  
                                   output_num_use<=output_num_use+1;
                             when x"38" =>
                                 OUTPUTS(output_num)(3)<='0';
                                 OUTPUTS(output_num)(2 downto 0)<="111";
-                                output_num<=output_num+1;
                                 output_num_use<=output_num_use+1;       
                             when others =>
-                            OUTPUTS(output_num)<="1111";
-                            output_num<=output_num+1;
+                            OUTPUTS(output_num)<="1111";                           
                          end case;
+                         output_num<=output_num+1;
                     elsif Data_temp2(15 downto 8) =x"50" then
-                        
+    
                         case Data_temp2(7 downto 0) is 
                             when x"31" =>
                              OUTPUTS(output_num)(3)<='1';
                              OUTPUTS(output_num)(2 downto 0)<="000";
-                             output_num<=output_num+1;
+                       
                              output_num_use<=output_num_use+1;
                             when x"32" =>
                              OUTPUTS(output_num)(3)<='1';
                              OUTPUTS(output_num)(2 downto 0)<="001";
-                             output_num<=output_num+1;
+                      
                             output_num_use<=output_num_use+1;
                             when x"33" =>
                              OUTPUTS(output_num)(3)<='1';
                             OUTPUTS(output_num)(2 downto 0)<="010";
-                            output_num<=output_num+1;
+                        
                             output_num_use<=output_num_use+1;
                             when x"34" =>
                              OUTPUTS(output_num)(3)<='1';
                             OUTPUTS(output_num)(2 downto 0)<="011";
-                            output_num<=output_num+1;
+                 
                             output_num_use<=output_num_use+1;
                             when others =>
                             OUTPUTS(output_num)<="1111";
-                            output_num<=output_num+1;
                          end case;
+                         output_num<=output_num+1;
                      elsif Data_temp2 = START_CMD then    
                       DOUT_Data <= x"0000";  
                       else 
-                        output_num<=output_num+1;
                     end if;
                     else  
                     if input_pointers(1)>19 and input_pointers(0)>19 then
@@ -347,21 +338,22 @@ begin
                  else 
                  end if;
              when RUNNING =>
-                start_stop<='1';
-                     if output_num_use >0 then  -- Adjusting for 48-bit data storage 
-                     LED_GPIO1<='1';
+                     if output_num_use > 0 then  -- Adjusting for 48-bit data storage 
+                     LED_GPIO8<='1'; 
+                     start_stop<='1';
                       Capture_sucess<=false;
                       if  input_pointers(1)>0 or input_pointers(0)>0 then
                         for i in 0 to 1 loop
                             if INPUT(i,20 - input_pointers(i))(14)='1' then
                                 input_Timestamp(15 downto 13)<="000";
                                 input_Timestamp(12 downto 0)<= INPUT(i,20 - input_pointers(i))(12 downto 0);
-                                if input_Timestamp = Timestamp_ms and i = 0 then
+                                if input_Timestamp = Timestamp_ms and i = 0 then    
                                    GPIO_IN1<= INPUT(i,20 - input_pointers(i))(13);
                                    input_pointers(i)<=input_pointers(i)-1;
                                 elsif input_Timestamp = Timestamp_ms and i = 1 then
                                    GPIO_IN2<= INPUT(i,20 - input_pointers(i))(13);
                                    input_pointers(i)<=input_pointers(i)-1;
+                                  
                                 end if;
                             else
                                 input_pointers(i)<=input_pointers(i)-1;
@@ -370,21 +362,24 @@ begin
                       end if;
                          for i in 0 to 7 loop
                             if OUTPUTS(i)(3)='0' then
-                                if    OUTPUTS(i)(2 downto 0)="000" then
+                              if    OUTPUTS(i)(2 downto 0)="000" then
                                 if temp_pointer_s(0) <= 39 then
                                         signal_in_GPIO(0)<=GPIO_OUT1; 
                                         current_GPIO(0)<=signal_in_GPIO(0);
                                         if current_GPIO(0) /= previous_GPIO(0)  then
+                                           LED_GPIO1<=current_GPIO(0);
                                            previous_GPIO(0)<= current_GPIO(0);
-                                           Data_BRAM_OUTPUTS(0,temp_pointer_s(0))(31)<='0';
-                                           Data_BRAM_OUTPUTS(0,temp_pointer_s(0))(30 downto 28)<="000";
-                                           Data_BRAM_OUTPUTS(0,temp_pointer_s(0))(27 downto 16)<=(11 downto 1 => '0', 0 => GPIO_OUT1);
-                                           Data_BRAM_OUTPUTS(0,temp_pointer_s(0))(15 downto 0)<= Timestamp_ms;      
+                                           Data_BRAM_OUTPUTS(0,temp_pointer_s(0))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(0,temp_pointer_s(0))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(0,temp_pointer_s(0))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(0));
+                                           Data_BRAM_OUTPUTS(0,temp_pointer_s(0))(15 downto 0)<= Timestamp_ms;   
                                            temp_pointer_s(0)<= temp_pointer_s(0)+1;  
-                                        else
                                         end if;
                                   else
-                                  output_num_use<=output_num_use-1;
+                                  if cap_sucess(0) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(0)<='1';
+                                  end if;
                                  end if;
                                 elsif OUTPUTS(i)(2 downto 0)="001" then
                                  if temp_pointer_s(1) <=39 then
@@ -393,325 +388,271 @@ begin
                                         if current_GPIO(1) /= previous_GPIO(1)  then
                                            LED_GPIO2<=current_GPIO(1);
                                            previous_GPIO(1)<= current_GPIO(1);
-                                           Data_BRAM_OUTPUTS(1,temp_pointer_s(1))(31)<='0';
-                                           Data_BRAM_OUTPUTS(1,temp_pointer_s(1))(30 downto 28)<="001";
-                                           Data_BRAM_OUTPUTS(1,temp_pointer_s(1))(27 downto 16)<=(11 downto 1 => '0', 0 => GPIO_OUT2);
+                                           Data_BRAM_OUTPUTS(1,temp_pointer_s(1))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(1,temp_pointer_s(1))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(1,temp_pointer_s(1))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(1));
                                            Data_BRAM_OUTPUTS(1,temp_pointer_s(1))(15 downto 0)<= Timestamp_ms;        
                                            temp_pointer_s(1)<= temp_pointer_s(1)+1; 
                                         else
                                         end if;
-                                        else
-                                  output_num_use<=output_num_use-1;
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="010" then
-                                if temp_pointer_s(2) <=39 then
-                                   
+                                  else
+                                   if cap_sucess(1) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(1)<='1';
+                                   end if;
+                                  end if;
+                                  elsif OUTPUTS(i)(2 downto 0)="010" then
+                                 if temp_pointer_s(2) <=39 then
                                         signal_in_GPIO(2)<=GPIO_OUT3; 
                                         current_GPIO(2)<=signal_in_GPIO(2);
                                         if current_GPIO(2) /= previous_GPIO(2)  then
                                            LED_GPIO3<=current_GPIO(2);
-                                           previous_GPIO(2)<= current_GPIO(2);
-                                           Data_BRAM_OUTPUTS(2,temp_pointer_s(2))(31)<='0';
-                                           Data_BRAM_OUTPUTS(2,temp_pointer_s(2))(30 downto 28)<="010";
-                                           Data_BRAM_OUTPUTS(2,temp_pointer_s(2))(27 downto 16)<=(11 downto 1 => '0', 0 => GPIO_OUT3);
+                                           previous_GPIO(1)<= current_GPIO(2);
+                                           Data_BRAM_OUTPUTS(2,temp_pointer_s(2))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(2,temp_pointer_s(2))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(2,temp_pointer_s(2))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(2));
                                            Data_BRAM_OUTPUTS(2,temp_pointer_s(2))(15 downto 0)<= Timestamp_ms;        
-                                        temp_pointer_s(2)<= temp_pointer_s(2)+1; 
+                                           temp_pointer_s(2)<= temp_pointer_s(2)+1; 
                                         else
                                         end if;
-                                   else
-                                  output_num_use<=output_num_use-1;
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="011" then
-                                if temp_pointer_s(3) <=39 then           
+                                  else
+                                   if cap_sucess(2) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(2)<='1';
+                                   end if;
+                                  end if;
+                                  elsif OUTPUTS(i)(2 downto 0)="011" then
+                                 if temp_pointer_s(3) <=39 then
                                         signal_in_GPIO(3)<=GPIO_OUT4; 
                                         current_GPIO(3)<=signal_in_GPIO(3);
                                         if current_GPIO(3) /= previous_GPIO(3)  then
-                                            LED_GPIO4<=current_GPIO(3);
-                                           previous_GPIO(3)<= current_GPIO(3);
-                                           Data_BRAM_OUTPUTS(3,temp_pointer_s(3))(31)<='0';
-                                           Data_BRAM_OUTPUTS(3,temp_pointer_s(3))(30 downto 28)<="011";
-                                           Data_BRAM_OUTPUTS(3,temp_pointer_s(3))(27 downto 16)<=(11 downto 1 => '0', 0 => GPIO_OUT4);
+                                           LED_GPIO4<=current_GPIO(3);
+                                           previous_GPIO(1)<= current_GPIO(3);
+                                           Data_BRAM_OUTPUTS(3,temp_pointer_s(3))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(3,temp_pointer_s(3))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(3,temp_pointer_s(3))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(3));
                                            Data_BRAM_OUTPUTS(3,temp_pointer_s(3))(15 downto 0)<= Timestamp_ms;        
-                                        temp_pointer_s(3)<= temp_pointer_s(3)+1; 
+                                           temp_pointer_s(3)<= temp_pointer_s(3)+1; 
                                         else
                                         end if;
-                                        else
-                                  output_num_use<=output_num_use-1;
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="100" then
-                                if temp_pointer_s(4) <=39 then     
+                                  else
+                                   if cap_sucess(3) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(3)<='1';
+                                   end if;
+                                  end if;
+                                  elsif OUTPUTS(i)(2 downto 0)="100" then
+                                 if temp_pointer_s(4) <=39 then
                                         signal_in_GPIO(4)<=GPIO_OUT5; 
                                         current_GPIO(4)<=signal_in_GPIO(4);
                                         if current_GPIO(4) /= previous_GPIO(4)  then
-                                            LED_GPIO5<=current_GPIO(4);
+                                           LED_GPIO5<=current_GPIO(4);
                                            previous_GPIO(4)<= current_GPIO(4);
-                                           Data_BRAM_OUTPUTS(4,temp_pointer_s(4))(31)<='0';
-                                           Data_BRAM_OUTPUTS(4,temp_pointer_s(4))(30 downto 28)<="100";
-                                           Data_BRAM_OUTPUTS(4,temp_pointer_s(4))(27 downto 16)<=(11 downto 1 => '0', 0 => GPIO_OUT5);
+                                           Data_BRAM_OUTPUTS(4,temp_pointer_s(4))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(4,temp_pointer_s(4))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(4,temp_pointer_s(4))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(4));
                                            Data_BRAM_OUTPUTS(4,temp_pointer_s(4))(15 downto 0)<= Timestamp_ms;        
-                                        temp_pointer_s(4)<= temp_pointer_s(4)+1; 
+                                           temp_pointer_s(4)<= temp_pointer_s(4)+1; 
                                         else
                                         end if;
-                                        else
-                                  output_num_use<=output_num_use-1;
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="101" then
+                                  else
+                                   if cap_sucess(4) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(4)<='1';
+                                   end if;
+                                  end if;
+                                 elsif OUTPUTS(i)(2 downto 0)="101" then
                                  if temp_pointer_s(5) <=39 then
-                                     
                                         signal_in_GPIO(5)<=GPIO_OUT6; 
                                         current_GPIO(5)<=signal_in_GPIO(5);
                                         if current_GPIO(5) /= previous_GPIO(5)  then
-                                        LED_GPIO6<=current_GPIO(5);
+                                           LED_GPIO6<=current_GPIO(5);
                                            previous_GPIO(5)<= current_GPIO(5);
-                                           Data_BRAM_OUTPUTS(5,temp_pointer_s(5))(31)<='0';
-                                           Data_BRAM_OUTPUTS(5,temp_pointer_s(5))(30 downto 28)<="100";
-                                           Data_BRAM_OUTPUTS(5,temp_pointer_s(5))(27 downto 16)<=(11 downto 1 => '0', 0 => GPIO_OUT6);
+                                           Data_BRAM_OUTPUTS(5,temp_pointer_s(5))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(5,temp_pointer_s(5))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(5,temp_pointer_s(5))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(5));
                                            Data_BRAM_OUTPUTS(5,temp_pointer_s(5))(15 downto 0)<= Timestamp_ms;        
-                                        temp_pointer_s(5)<= temp_pointer_s(5)+1; 
+                                           temp_pointer_s(5)<= temp_pointer_s(5)+1; 
                                         else
                                         end if;
-                                   else
-                                        output_num_use<=output_num_use-1;
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="110" then
+                                  else
+                                   if cap_sucess(5) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(5)<='1';
+                                   end if;
+                                  end if;
+                                   elsif OUTPUTS(i)(2 downto 0)="110" then
                                  if temp_pointer_s(6) <=39 then
                                         signal_in_GPIO(6)<=GPIO_OUT7; 
                                         current_GPIO(6)<=signal_in_GPIO(6);
                                         if current_GPIO(6) /= previous_GPIO(6)  then
+                                           LED_GPIO7<=current_GPIO(6);
                                            previous_GPIO(6)<= current_GPIO(6);
-                                           Data_BRAM_OUTPUTS(6, temp_pointer_s(6))(31)<='0';
-                                           Data_BRAM_OUTPUTS(6, temp_pointer_s(6))(30 downto 28)<="100";
-                                           Data_BRAM_OUTPUTS(6, temp_pointer_s(6))(27 downto 16)<=(11 downto 1 => '0', 0 => GPIO_OUT7);
-                                           Data_BRAM_OUTPUTS(6, temp_pointer_s(6))(15 downto 0)<= Timestamp_ms;        
-                                         temp_pointer_s(6)<=  temp_pointer_s(6)+1; 
+                                           Data_BRAM_OUTPUTS(6,temp_pointer_s(6))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(6,temp_pointer_s(6))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(6,temp_pointer_s(6))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(6));
+                                           Data_BRAM_OUTPUTS(6,temp_pointer_s(6))(15 downto 0)<= Timestamp_ms;        
+                                           temp_pointer_s(6)<= temp_pointer_s(6)+1; 
                                         else
                                         end if;
-                                   else
-                                  output_num_use<=output_num_use-1;
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="111" then
-                                 if  temp_pointer_s(7)<=39 then
+                                  else
+                                   if cap_sucess(6) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(6)<='1';
+                                   end if;
+                                  end if;
+                                   elsif OUTPUTS(i)(2 downto 0)="111" then
+                                 if temp_pointer_s(7) <=39 then
                                         signal_in_GPIO(7)<=GPIO_OUT8; 
                                         current_GPIO(7)<=signal_in_GPIO(7);
                                         if current_GPIO(7) /= previous_GPIO(7)  then
+                                           LED_GPIO8<=current_GPIO(7);
                                            previous_GPIO(7)<= current_GPIO(7);
-                                           Data_BRAM_OUTPUTS(7, temp_pointer_s(7))(31)<='0';
-                                           Data_BRAM_OUTPUTS(7, temp_pointer_s(7))(30 downto 28)<="100";
-                                           Data_BRAM_OUTPUTS(7, temp_pointer_s(7))(27 downto 16)<=(11 downto 1 => '0', 0 => GPIO_OUT8);
-                                           Data_BRAM_OUTPUTS(7, temp_pointer_s(7))(15 downto 0)<= Timestamp_ms;        
-                                         temp_pointer_s(7)<=  temp_pointer_s(7)+1; 
+                                           Data_BRAM_OUTPUTS(7,temp_pointer_s(7))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(7,temp_pointer_s(7))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(7,temp_pointer_s(7))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(7));
+                                           Data_BRAM_OUTPUTS(7,temp_pointer_s(7))(15 downto 0)<= Timestamp_ms;        
+                                           temp_pointer_s(7)<= temp_pointer_s(7)+1; 
                                         else
                                         end if;
-                                 end if;
-                                else
-                                  output_num_use<=output_num_use-1;
+                                  else
+                                   if cap_sucess(7) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(7)<='1';
+                                   end if;
+                                  end if;   
                                 end if;
-                            elsif OUTPUTS(i)(3) = '1' then
+                                elsif OUTPUTS(i)(3)='1' then
                                 if    OUTPUTS(i)(2 downto 0)="000" then
-                                    if temp_pointer_s(8) <=39 then
-                                        signal_in_PWM(0)<=PWM_OUT1; 
-                                        current_PWM(0)<=signal_in_PWM(0);
-                                        if current_PWM(0) /= previous_PWM(0)  then
-                                           previous_PWM(0)<= current_PWM(0);
-                                           Data_BRAM_OUTPUTS(8,temp_pointer_s(8))(31)<='1';
-                                           Data_BRAM_OUTPUTS(8,temp_pointer_s(8))(30 downto 28)<="000";
-                                           Data_BRAM_OUTPUTS(8,temp_pointer_s(8))(27 downto 16)<=(11 downto 1 => '0', 0 => PWM_OUT1);
-                                           Data_BRAM_OUTPUTS(8,temp_pointer_s(8))(15 downto 0)<= Timestamp_ms;        
-                                        temp_pointer_s(8)<=temp_pointer_s(8)+1;
-                                        else
+                                  if temp_pointer_s(8) <= 39 then
+                                        signal_in_GPIO(8)<=PWM_OUT1; 
+                                        current_GPIO(8)<=signal_in_GPIO(8);
+                                        if current_GPIO(8) /= previous_GPIO(8)  then
+                                           LED_GPIO1<=current_GPIO(8);
+                                           previous_GPIO(8)<= current_GPIO(8);
+                                           Data_BRAM_OUTPUTS(8,temp_pointer_s(8))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(8,temp_pointer_s(8))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(8,temp_pointer_s(8))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(8));
+                                           Data_BRAM_OUTPUTS(8,temp_pointer_s(8))(15 downto 0)<= Timestamp_ms;   
+                                           temp_pointer_s(8)<= temp_pointer_s(8)+1;  
                                         end if;
-                                        else
-                                  output_num_use<=output_num_use-1;
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="001" then
-                                  if temp_pointer_s(9) <= 39 then
-                                        signal_in_PWM(1)<=PWM_OUT2; 
-                                        current_PWM(1)<=signal_in_PWM(1);
-                                        if current_PWM(1) /= previous_PWM(1)  then
-                                           previous_PWM(1)<= current_PWM(1);
-                                           Data_BRAM_OUTPUTS(9,temp_pointer_s(9))(31)<='1';
-                                           Data_BRAM_OUTPUTS(9,temp_pointer_s(9))(30 downto 28)<="001";
-                                           Data_BRAM_OUTPUTS(9,temp_pointer_s(9))(27 downto 16)<=(11 downto 1 => '0', 0 => PWM_OUT2);
+                                  else
+                                    if cap_sucess(8) = '0' then
+                                        output_num_use<=output_num_use-1;
+                                        cap_sucess(8)<='1';
+                                    end if;
+                                  end if;
+                                  elsif OUTPUTS(i)(2 downto 0)="001" then
+                                 if temp_pointer_s(9) <=39 then
+                                        signal_in_GPIO(9)<=PWM_OUT2; 
+                                        current_GPIO(9)<=signal_in_GPIO(9);
+                                        if current_GPIO(9) /= previous_GPIO(9)  then
+                                           LED_GPIO8<=current_GPIO(9);
+                                           previous_GPIO(9)<= current_GPIO(9);
+                                           Data_BRAM_OUTPUTS(9,temp_pointer_s(9))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(9,temp_pointer_s(9))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(9,temp_pointer_s(9))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(9));
                                            Data_BRAM_OUTPUTS(9,temp_pointer_s(9))(15 downto 0)<= Timestamp_ms;        
-                                        temp_pointer_s(9)<=temp_pointer_s(9)+1;
+                                           temp_pointer_s(9)<= temp_pointer_s(9)+1; 
                                         else
                                         end if;
-                                        else
-                                  output_num_use<=output_num_use-1;
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="010" then
-                                 if temp_pointer_s(10) <= 39 then
-                                        signal_in_PWM(2)<=PWM_OUT3; 
-                                        current_PWM(2)<=signal_in_PWM(2);
-                                        if current_PWM(2) /= previous_PWM(2)  then
-                                           previous_PWM(2)<= current_PWM(2);
-                                           Data_BRAM_OUTPUTS(10,temp_pointer_s(10))(31)<='1';
-                                           Data_BRAM_OUTPUTS(10,temp_pointer_s(10))(30 downto 28)<="010";
-                                           Data_BRAM_OUTPUTS(10,temp_pointer_s(10))(27 downto 16)<=(11 downto 1 => '0', 0 => PWM_OUT3);
+                                  else
+                                   if cap_sucess(9) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(9)<='1';
+                                   end if;
+                                  end if;   
+                                  elsif OUTPUTS(i)(2 downto 0)="010" then
+                                 if temp_pointer_s(10) <=39 then
+                                        signal_in_GPIO(10)<=PWM_OUT3; 
+                                        current_GPIO(10)<=signal_in_GPIO(10);
+                                        if current_GPIO(10) /= previous_GPIO(10)  then
+                                           LED_GPIO8<=current_GPIO(10);
+                                           previous_GPIO(10)<= current_GPIO(10);
+                                           Data_BRAM_OUTPUTS(10,temp_pointer_s(10))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(10,temp_pointer_s(10))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(10,temp_pointer_s(10))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(10));
                                            Data_BRAM_OUTPUTS(10,temp_pointer_s(10))(15 downto 0)<= Timestamp_ms;        
-                                        temp_pointer_s(10)<=temp_pointer_s(10)+1;
+                                           temp_pointer_s(10)<= temp_pointer_s(10)+1; 
                                         else
                                         end if;
-                                        else
-                                  output_num_use<=output_num_use-1;
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="011" then
-                                 if temp_pointer_s(11) <= 39 then
-                                        signal_in_PWM(3)<=PWM_OUT4; 
-                                        current_PWM(3)<=signal_in_PWM(3);
-                                        if current_PWM(3) /= previous_PWM(3)  then
-                                           previous_PWM(3)<= current_PWM(3);
-                                           Data_BRAM_OUTPUTS(11,temp_pointer_s(11))(31)<='1';
-                                           Data_BRAM_OUTPUTS(11,temp_pointer_s(11))(30 downto 28)<="011";
-                                           Data_BRAM_OUTPUTS(11,temp_pointer_s(11))(27 downto 16)<=(11 downto 1 => '0', 0 => PWM_OUT4);
+                                  else
+                                   if cap_sucess(10) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(10)<='1';
+                                   end if;
+                                  end if; 
+                                  elsif OUTPUTS(i)(2 downto 0)="011" then
+                                 if temp_pointer_s(11) <=39 then
+                                        signal_in_GPIO(11)<=PWM_OUT4; 
+                                        current_GPIO(11)<=signal_in_GPIO(11);
+                                        if current_GPIO(11) /= previous_GPIO(11)  then
+                                           LED_GPIO8<=current_GPIO(11);
+                                           previous_GPIO(11)<= current_GPIO(11);
+                                           Data_BRAM_OUTPUTS(11,temp_pointer_s(11))(31)<=OUTPUTS(i)(3);
+                                           Data_BRAM_OUTPUTS(11,temp_pointer_s(11))(30 downto 28)<=OUTPUTS(i)(2 downto 0);
+                                           Data_BRAM_OUTPUTS(11,temp_pointer_s(11))(27 downto 16)<=(11 downto 1 => '0', 0 => previous_GPIO(11));
                                            Data_BRAM_OUTPUTS(11,temp_pointer_s(11))(15 downto 0)<= Timestamp_ms;        
-                                        temp_pointer_s(11)<=temp_pointer_s(11)+1;
+                                           temp_pointer_s(11)<= temp_pointer_s(11)+1; 
                                         else
                                         end if;
-                                        else
-                                  output_num_use<=output_num_use-1;
-                                 end if;
-                                else
-                                end if;
-                            else 
+                                  else
+                                   if cap_sucess(11) = '0' then
+                                    output_num_use<=output_num_use-1;
+                                    cap_sucess(11)<='1';
+                                   end if;
+                                  end if;     
+                              end if;
+                            else
                             end if;
                        end loop; 
-                
                 else
                 --cassssssss
+                LED_GPIO8<='0';
                 start_stop<='0';
-                LED_GPIO1<='0';
                 Capture_sucess<=true;
                 end if;
     when STOPPED =>        
-            if temp_pointer <=319 then
-                  LED_GPIO8<='1'; 
-                  Switch2<='1';
-                       for i in 0 to 7 loop
-                            if OUTPUTS(i)(3)='0' then
-                               if    OUTPUTS(i)(2 downto 0)="000" then
-                                if temp_pointer_s(0) > 0 then
-                                temp_pointer_s(0)<=temp_pointer_s(0)-1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(0,temp_pointer_s(0));   
-                                else
-                                LED_GPIO1<='1';
-                                end if;
-                                elsif OUTPUTS(i)(2 downto 0)="001" then
-                                if temp_pointer_s(1) > 0 then
-                                temp_pointer_s(1)<=temp_pointer_s(1)- 1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(1,temp_pointer_s(1));
-                                else
-                                LED_GPIO2<='1';
-                                end if;
-                                elsif OUTPUTS(i)(2 downto 0)="010" then
-                                if temp_pointer_s(2) > 0 then
-                                temp_pointer_s(2)<= temp_pointer_s(2)-1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(2, temp_pointer_s(2));
-                                else
-                                LED_GPIO3<='1';
-                                end if;
-                                elsif OUTPUTS(i)(2 downto 0)="011" then
-                                if temp_pointer_s(3) >  0 then
-                                temp_pointer_s(3)<=temp_pointer_s(3)-1;                               
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(3,temp_pointer_s(3));
-                              else
-                                LED_GPIO4<='1';
-                                end if;
-                                elsif OUTPUTS(i)(2 downto 0)="100" then
-                                if temp_pointer_s(4) >  0 then
-                                temp_pointer_s(4)<=temp_pointer_s(4)-1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(4,temp_pointer_s(4));
-                                else
-                                LED_GPIO5<='1';
-                                end if;
-                                elsif OUTPUTS(i)(2 downto 0)="101" then
-                                 if temp_pointer_s(5) >  0 then
-                                temp_pointer_s(5)<=temp_pointer_s(5)-1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(5,temp_pointer_s(5));
-                                else
-                                LED_GPIO6<='1';
-                                end if;
-                                elsif OUTPUTS(i)(2 downto 0)="110" then
-                                if  temp_pointer_s(6) > 0 then
-                                temp_pointer_s(6)<=temp_pointer_s(6)-1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(6,temp_pointer_s(6));
-                                else
-                                LED_GPIO7<='1';
-                                end if;
-                                elsif OUTPUTS(i)(2 downto 0) = "111" then
-                                 if  temp_pointer_s(7) > 0 then
-                                 temp_pointer_s(7)<=temp_pointer_s(7)-1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(7,temp_pointer_s(7));   
-                                else
-                                end if;
-                                else
-                                Data_BRAM(temp_pointer)(31 downto 0)<=x"00000000";
-                             
-                                end if;
-                            elsif OUTPUTS(i)(3)='1' then
-                                if    OUTPUTS(i)(2 downto 0)="000" then
-                               if temp_pointer_s(8) > 0 then
-                               temp_pointer_s(8)<=temp_pointer_s(8)-1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(8,temp_pointer_s(8));
-                               
-                                else
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="001" then
-                                if temp_pointer_s(9) > 0  then
-                                temp_pointer_s(9)<=temp_pointer_s(9)-1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(9,temp_pointer_s(9));
-                             
-                                else
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="010" then
-                                 if temp_pointer_s(10) > 0 then
-                                temp_pointer_s(10)<=temp_pointer_s(10)-1;
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(10,temp_pointer_s(10));
-                                     
-                                else
-                                 end if;
-                                elsif OUTPUTS(i)(2 downto 0)="011" then
-                                if temp_pointer_s(11) > 0 then
-                                temp_pointer_s(11)<=temp_pointer_s(11)-1; 
-                                Data_BRAM(temp_pointer)<=Data_BRAM_OUTPUTS(11,temp_pointer_s(11));  
-                                                           
-                                else
-                                end if;
-                                else  
-                                Data_BRAM(temp_pointer)(31 downto 0)<=x"30303030";
-                                                            
-                                end if;
-                            else 
-                            Data_BRAM(temp_pointer)(31 downto 0)<=x"30303030";
-                            end if;
-                            temp_pointer<=temp_pointer+1;
-                        end loop ; 
-                        
-              else         
-              LED_GPIO8<='0';     
+           if temp_pointer <= 479 then   
+                  Switch2<='1';  
+                  for i in 0 to 39 loop
+                      Data_BRAM(8*i)<=Data_BRAM_OUTPUTS(0,i);
+                      Data_BRAM(8*i+1)<=Data_BRAM_OUTPUTS(1,i);
+                      Data_BRAM(8*i+2)<=Data_BRAM_OUTPUTS(2,i);
+                      Data_BRAM(8*i+3)<=Data_BRAM_OUTPUTS(3,i);
+                      Data_BRAM(8*i+4)<=Data_BRAM_OUTPUTS(4,i);
+                      Data_BRAM(8*i+5)<=Data_BRAM_OUTPUTS(5,i);
+                      Data_BRAM(8*i+6)<=Data_BRAM_OUTPUTS(6,i);
+                      Data_BRAM(8*i+7)<=Data_BRAM_OUTPUTS(7,i);
+                      Data_BRAM(8*i+8)<=Data_BRAM_OUTPUTS(8,i);
+                      Data_BRAM(8*i+9)<=Data_BRAM_OUTPUTS(9,i);
+                      Data_BRAM(8*i+10)<=Data_BRAM_OUTPUTS(10,i);
+                      Data_BRAM(8*i+11)<=Data_BRAM_OUTPUTS(11,i);
+                      temp_pointer<=temp_pointer+1;
+                  end loop;      
+              else  
+              LED_GPIO8<='0';        
               if DIN_VLD = '1' and Data_temp2 = STOP_CMD then  -- Check if STOP_CMD is received
                   if read_pointer < temp_pointer then
-                  
-                    -- Extract the 48-bit data from BRAM
-                    -- Read data from BRAM
+                  if Data_BRAM(read_pointer)= x"FFFFFFFF" then
+                     read_pointer <= read_pointer + 1;  -- Move to the next data  
+                  else
                     case send_part_state is
                         when 0 =>
-                            LED_GPIO7<='0';
-                            DOUT_Data <= Data_BRAM(read_pointer)(31 downto 16);  -- Send first 16 bits
+                            DOUT_Data <=  Data_BRAM(read_pointer)(31 downto 16);  -- Send first 16 bits
                             send_part_state <= 1;  -- Move to next state to send the next part
-                        when 1 =>
-                            LED_GPIO7<='1';
-                            DOUT_Data <= Data_BRAM(read_pointer)(15 downto 0);  -- Send second 16 bits
+                        when 1 => 
+                            DOUT_Data <=   Data_BRAM(read_pointer)(15 downto 0);  -- Send second 16 bits
                             send_part_state <= 0;  -- Reset to first part for next cycle
-                            read_pointer <= read_pointer + 1;  -- Move to the next data
-                            
+                            read_pointer <= read_pointer + 1;  -- Move to the next data      
                         when others =>
-                            DOUT_Data <= (others => '0');  -- Default case
+                           -- DOUT_Data <= (others => '1');  -- Default case
                     end case;
-
-                else
+                    end if;
+                else             
                     Switch2<='0';
                     DOUT_Data<=x"726A";
+                    
                 end if;
               end if;
            end if;
